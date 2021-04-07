@@ -52,6 +52,7 @@ using namespace hls;
 #include "conv.hpp"
 #include "memdata.h"
 #include "config.h"
+#include "utils.hpp"
 
 void Testbench_conv(stream<ap_uint<IFM_Channels1*INPUT_PRECISION> > & in, stream<ap_uint<OFM_Channels1*ACTIVATION_PRECISION> > & out, unsigned int numReps){
 #pragma HLS DATAFLOW
@@ -70,9 +71,13 @@ void Testbench_conv(stream<ap_uint<IFM_Channels1*INPUT_PRECISION> > & in, stream
 
     ConvolutionInputGenerator<KERNEL_DIM, IFM_Channels1, INPUT_PRECISION, IFMDim1, OFMDim1, SIMD1, 1>(wa_in, convInp, numReps, ap_resource_dflt());
 
+    //logStringStream<SIMD1*INPUT_PRECISION>("inp_act.memh",convInp);
+    //logStringStream<SIMD1*PE1*WIDTH>("inp_wgt.memh",paramStreamOut);
+
     Matrix_Vector_Activate_Stream_Batch<MatrixW, MatrixH, SIMD1, PE1, Slice<ap_uint<INPUT_PRECISION> >, Slice<ap_int<ACTIVATION_PRECISION> >, Identity, ap_uint<WIDTH> >
     (    static_cast<hls::stream<ap_uint<SIMD1*INPUT_PRECISION>>&>(convInp),
          static_cast<hls::stream<ap_uint<PE1*ACTIVATION_PRECISION>>&>  (mvOut),
          paramStreamOut, PassThroughActivation<ap_uint<16>>(), numReps* OFMDim1 * OFMDim1, ap_resource_dsp()    );
+    //logStringStream<PE1*ACTIVATION_PRECISION>("out_act.memh",mvOut);
 
 }

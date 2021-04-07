@@ -148,6 +148,7 @@ void Matrix_Vector_Activate_Batch(hls::stream<TI> &in,
     auto const &w = weights.weights(tile);
     for(unsigned  pe = 0; pe < PE; pe++) {
 #pragma HLS UNROLL
+    	//std::cout << "Processing element: " << pe << std::endl;
       auto const  wgt = TWeightI()(w[pe]);
       for (unsigned mmv = 0; mmv < MMV; mmv++){
         auto const  act = TSrcI()(inElem, mmv);

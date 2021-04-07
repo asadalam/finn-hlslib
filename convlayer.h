@@ -115,10 +115,14 @@ void ConvLayer_Batch(hls::stream<ap_uint<InStreamW>>  &in,
   hls::stream<ap_uint<SIMD*TSrcI::width> > convInp("StreamingConvLayer_Batch.convInp");
   ConvolutionInputGenerator<ConvKernelDim, IFMChannels, TSrcI::width, IFMDim,
 			OFMDim, SIMD,1>(wa_in, convInp, reps, ap_resource_dflt());
+  // Logging input activation matrix
+  // logStringStream<SIMD*TSrcI::width>("inp_act.memh",convInp);
   Matrix_Vector_Activate_Batch<MatrixW, MatrixH, SIMD, PE, 1, TSrcI, TDstI, TWeightI>
     (static_cast<hls::stream<ap_uint<SIMD*TSrcI::width>>&>(convInp),
      static_cast<hls::stream<ap_uint<PE*TDstI::width>>&>  (mvOut),
      weights, activation, reps* OFMDim * OFMDim, r);
+  // Logging output activation matrix
+  // logStringStream<PE*TDstI::width>("out_act.memh",mvOut);
 }
 
 

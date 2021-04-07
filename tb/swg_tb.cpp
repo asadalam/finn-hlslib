@@ -41,6 +41,8 @@
 #include <hls_stream.h>
 #include "ap_int.h"
 #include <iostream>
+#include <fstream>
+#include <iomanip>
 #include <string>
 #include "input_gen.h"
 #include "math.h"
@@ -59,6 +61,9 @@ stream<ap_uint<IFM_Channels*INPUT_PRECISION> > input_stream("input_stream");
 stream<ap_uint<IFM_Channels*INPUT_PRECISION> > output_stream("output_stream");
 	unsigned int counter = 0;
 	for (unsigned int n_image = 0; n_image < MAX_IMAGES; n_image++) {
+	  // std::ofstream InpAct_File;
+	  // string inp_act_fname = "inp_act" + to_string(n_image) + ".mem";
+	  // InpAct_File.open(inp_act_fname.c_str());
 		for (unsigned int oy = 0; oy < IFMDim; oy++) {
 			for (unsigned int ox = 0; ox < IFMDim; ox++) {
 				ap_uint<INPUT_PRECISION*IFM_Channels> input_channel = 0;
@@ -68,15 +73,20 @@ stream<ap_uint<IFM_Channels*INPUT_PRECISION> > output_stream("output_stream");
 					INPUT_IMAGES[n_image][oy*IFMDim+ox][channel]= input;
 					input_channel = input_channel >> INPUT_PRECISION;
 					input_channel(IFM_Channels*INPUT_PRECISION-1,(IFM_Channels-1)*INPUT_PRECISION)=input;
-
 					counter++;
+					//InpAct_File << hex << input << " ";
 				}
+				//InpAct_File << "\n";
 				input_stream.write(input_channel);
 			}
 		}
+		InpAct_File.close();
 	}
 	Testbench(input_stream, output_stream, MAX_IMAGES);
 	for (unsigned int n_image = 0; n_image < MAX_IMAGES; n_image++) {
+	  //std::ofstream OutAct_File;
+	  //string out_act_fname = "out_act" + to_string(n_image) + ".mem";
+	  //OutAct_File.open(out_act_fname.c_str());
 		for (unsigned int oy = 0; oy < OFMDim; oy++) {
 			for (unsigned int ox = 0; ox < OFMDim; ox+=MMV) {
 				for (unsigned int ky = 0; ky < KERNEL_DIM; ky++) {
@@ -87,6 +97,7 @@ stream<ap_uint<IFM_Channels*INPUT_PRECISION> > output_stream("output_stream");
 						for(unsigned int channel = 0; channel < IFM_Channels; channel++){
 							ap_uint<INPUT_PRECISION> out_chan = 0;
 							out_chan = outElem(INPUT_PRECISION-1,0);
+							//OutAct_File << hex << out_chan << " ";
 							if (((INPUT_IMAGES[n_image][input_ind][channel])) != out_chan){
 								std::cout << "ERROR: " <<  " Expected " << INPUT_IMAGES[n_image][input_ind][channel] << " actual " <<  out_chan << std::endl;
 								std::cout << "oy= " << oy << " ox= " << ox << " ky= " << ky << " kx= " << kx << std::endl;
@@ -96,6 +107,7 @@ stream<ap_uint<IFM_Channels*INPUT_PRECISION> > output_stream("output_stream");
 						}
 					}
 				}
+				//OutAct_File << "\n";
 			}
 		}
 		std::cout << "Image # " << n_image << std::endl;

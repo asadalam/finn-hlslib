@@ -88,12 +88,14 @@ class ap_resource_uram {};
  */
 template < unsigned int BitWidth >
 void logStringStream(const char *layer_name, hls::stream<ap_uint<BitWidth> > &log){
-    std::ofstream ofs(layer_name);
-    hls::stream<ap_uint<BitWidth> > tmp_stream;
-	
+  std::ofstream ofs(layer_name);
+  hls::stream<ap_uint<BitWidth> > tmp_stream;
+  
   while(!log.empty()){
     ap_uint<BitWidth> tmp = (ap_uint<BitWidth>) log.read();
-    ofs << std::hex << tmp << std::endl;
+    unsigned long long tmp2 = (unsigned long long)tmp;
+    ofs << std::hex << tmp2 << std::endl;
+    //ofs << tmp << std::endl;
     tmp_stream.write(tmp);
   }
 

@@ -35,19 +35,20 @@ import subprocess
 
 outFileWeights = open("memdata.h" , "wt")
 outFileConfig = open("config.h" , "wt")
+outFileWeightsFull = open("../../proj/sim/weights_mem_full.memh","wt")
 
-kernel_dim = 3
+kernel_dim = 2
 stride = 1
-input_precision = 8
+input_precision = 4
 ifm_channels = 4
-ofm_channels = 16
-ifm_dimension = 3
-ofm_dimension = 1
+ofm_channels = 3
+ifm_dimension = 4
+ofm_dimension = (ifm_dimension-kernel_dim)/stride+1
 
-activation_precision = 16
+activation_precision = 4
 expand = 1
-simd = 2
-pe = 2
+simd = 4
+pe = 3
 w_precision = 1
 mmv=1
 
@@ -75,26 +76,52 @@ outFileWeights.write("#define PARAMS_HPP\n")
 
 outFileWeights.write("namespace PARAM{ \n")
 if (w_precision == 1):
-	outFileWeights.write("static BinaryWeights<%d,%d,%d> weights= {\n{\n" %(simd,pe,tile))
+		outFileWeights.write("static BinaryWeights<%d,%d,%d> weights= {\n{\n" %(simd,pe,tile))
 else:
-	outFileWeights.write("static FixedPointWeights<%d,ap_int<%d>,%d,%d> weights= {\n{\n" %(simd,w_precision,pe,tile))
+		outFileWeights.write("static FixedPointWeights<%d,ap_int<%d>,%d,%d> weights= {\n{\n" %(simd,w_precision,pe,tile))
 
+weights_dict = dict()
 for p in range(pe):
-	outFileWeights.write("{ \n")
-	for t in range(tile):
-		width = simd*w_precision;
-		val = random.randint(0, 1<<width-1)
-		outFileWeights.write("%s" % hex(val))
-		if t!=tile-1:
-			outFileWeights.write(",\n")
-	outFileWeights.write("} \n")
-	if p!=pe-1:
-		outFileWeights.write(",")
-
+		weights_list = []
+		dict_key = p
+		fname_src = "../../proj/src/mvau_top/weight_mem"+str(p)+".memh"
+		fname_sim = "../../proj/sim/weight_mem"+str(p)+".memh"
+		outFileWeightsHexSrc = open(fname_src,"wt")
+		outFileWeightsHexSim = open(fname_sim,"wt")		
+		outFileWeights.write("{ \n")
+		for t in range(tile):
+				width = simd*w_precision;
+				val = random.randint(0, 1<<width-1)
+				outFileWeights.write("%s" % hex(val))
+				formatted_string = format(val,"x")
+				outFileWeightsHexSrc.write("%s" % formatted_string)
+				outFileWeightsHexSim.write("%s" % formatted_string)
+				weights_list.append(formatted_string)		
+				if t!=tile-1:
+						outFileWeights.write(",\n")
+						outFileWeightsHexSrc.write("\n")
+						outFileWeightsHexSim.write("\n")
+		outFileWeights.write("} \n")
+		if p!=pe-1:
+				outFileWeights.write(",")
+		weights_dict[dict_key] = weights_list
+		outFileWeightsHexSrc.close()
+		outFileWeightsHexSim.close()	
 
 outFileWeights.write("}\n};\n } \n")
 outFileWeights.write("#endif \n")
 outFileWeights.close()
 
+nf = ofm_channels/pe
+matrix_w = kernel_dim*kernel_dim*ifm_channels // (simd)
+
+for n in np.arange(nf):
+		for p in weights_dict:
+				r = int(len(weights_dict[p])/nf)
+				for wt in np.arange(r):
+						k = int(wt+matrix_w*n)
+						outFileWeightsFull.write("%s\n" % weights_dict[p][k])
+				
+outFileWeightsFull.close()
 
 
