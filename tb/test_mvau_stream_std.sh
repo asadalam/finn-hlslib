@@ -16,6 +16,7 @@ else
 fi
 echo "Generating weights"
 python gen_weigths.py
+#--ifm_ch ${1} --ifm_dim ${2} --ofm_ch ${3} --kdim ${4} --inp_wl ${5} --wgt_wl ${6} --out_wl ${7} --simd ${8} --pe ${9}
 echo "Running HLS synthesis simulation"
 vivado_hls test_mvau_stream_std.tcl
 echo "Copying dumped data"

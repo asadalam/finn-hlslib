@@ -34,10 +34,10 @@
  *  Authors: Syed Asad Alam <syed.asad.alam@tcd.ie>
  *           Giulio Gambardella <giuliog@xilinx.com>
  *
- *  \file mvau_top_std.cpp
+ *  \file mvau_top_xnor.cpp
  *
  *  HLS Top function with a single matrix vector activation batch unit
- *  for unit testing with 1-bit input activation and weight
+ *  for unit testing using 1-bit weights and input activation
  *
  *****************************************************************************/
 #include <hls_stream.h>
@@ -54,29 +54,20 @@ using namespace hls;
 #include "conv.hpp"
 #include "memdata.h"
 #include "config.h"
+#define numReps 1
 
-void Testbench_mvau(stream<ap_uint<IFM_Channels1*INPUT_PRECISION> > & in, stream<ap_uint<OFM_Channels1*ACTIVATION_PRECISION> > & out, unsigned int numReps){
+void Testbench_mvau_xnor(stream<ap_inp<SIMD1*INPUT_PRECISION> > & in,
+			 stream<ap_out<PE1*ACTIVATION_PRECISION> > & out){
 #pragma HLS DATAFLOW
 
-  // Defining some parameters/constants
+  
   unsigned const MatrixW = KERNEL_DIM * KERNEL_DIM * IFM_Channels1;
   unsigned const MatrixH = OFM_Channels1;
-  unsigned const InpPerImage = IFMDim1*IFMDim1;
-
-  // Defining and generating input and output stream
-  hls::stream<ap_uint<SIMD1*INPUT_PRECISION> > convInp;      
-  WidthAdjustedInputStream <IFM_Channels1*INPUT_PRECISION, SIMD1*INPUT_PRECISION, InpPerImage>  wa_in (in,  numReps);
-  WidthAdjustedOutputStream <PE1*ACTIVATION_PRECISION, OFM_Channels1*ACTIVATION_PRECISION, OFMDim1 * OFMDim1 * (OFM_Channels1 / PE1)>  mvOut (out,  numReps);
-
-  // Convolution Input Generator
-  ConvolutionInputGenerator<KERNEL_DIM, IFM_Channels1, INPUT_PRECISION, IFMDim1, OFMDim1, SIMD1, 1>(wa_in, convInp, numReps, ap_resource_dflt());
 
   // Matrix Vector Activation Unit (Batch)
   Matrix_Vector_Activate_Batch<MatrixW, MatrixH, SIMD1, PE1, 1,
-			       Recast<Binary>, Recast<Binary>, Identity>
-    (//static_cast<hls::stream<ap_uint<SIMD1*INPUT_PRECISION>>&>(convInp),
-     convInp,
-     static_cast<hls::stream<ap_uint<PE1*ACTIVATION_PRECISION>>&>(mvOut),
-     //mvOut,
-     PARAM::weights, PassThroughActivation<ap_uint<ACTIVATION_PRECISION>>(), numReps*OFMDim1*OFMDim1, ap_resource_dsp());  
+			       Recast<XnorMul>, Slice<ap_out<ACTIVATION_PRECISION>>, Identity>
+    (static_cast<hls::stream<ap_inp<SIMD1*INPUT_PRECISION>>&>(in),
+     static_cast<hls::stream<ap_out<PE1*ACTIVATION_PRECISION>>&>(out),
+     PARAM::weights, PassThroughActivation<ap_out<ACTIVATION_PRECISION>>(), numReps*OFMDim1*OFMDim1, ap_resource_lut());  
 }

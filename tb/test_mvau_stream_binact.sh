@@ -18,13 +18,24 @@ echo "Generating weights"
 python gen_weigths.py
 echo "Running HLS simulation"
 vivado_hls test_mvau_stream_binact.tcl
-## echo "Copying dumped data"
-## cp hls-syn-mvau-stream-binact/sol1/csim/build/{inp_act.memh,inp_wgt.memh,out_act.memh} ../../proj/sim/
-## echo "Running behavorial simulation of RTL"
-## cd ../../proj/sim
-## bash mvau_stream_test_v3.sh
-## echo "Synthesizing MVAU Stream RTL"
-## cd ../syn
-## vivado -mode batch -source mvau_stream_synth.tcl
-## cd $FINN_HLS_ROOT/tb
+echo "Copying dumped data"
+cp hls-syn-mvau-stream-binact/sol1/csim/build/{inp_act.memh,inp_wgt.memh,out_act.memh} ../../proj/sim/
+echo "Running behavorial simulation of RTL"
+cd ../../proj/sim
+bash mvau_stream_test_v3.sh
+if grep -q "Data MisMatch" xsim.log; then
+    echo "RTL simulation failed"
+    exit 0
+elif grep -q "failed" xsim.log; then
+    echo "RTL simulation failed"
+    exit 0
+else
+    echo "RTL simulation successful"
+fi
+echo "Synthesizing MVAU Stream RTL"
+cd ../syn
+vivado -mode batch -source mvau_stream_synth.tcl
+echo "Analysing results and Extracting performance data"
+python extract_synthesis_data.py -o mvau_stream_binact_results.csv
+cd $FINN_HLS_ROOT/tb
 exit 1

@@ -67,9 +67,8 @@ using namespace std;
 
 #define MAX_IMAGES 1
 void Testbench_mvau_stream_binwgt(stream<ap_uint<SIMD1*INPUT_PRECISION> > & in,
-			       stream<ap_uint<SIMD1*PE1*WIDTH> > & paramStreamOut,
-			       stream<ap_uint<PE1*ACTIVATION_PRECISION> > & out,
-			       unsigned int numReps);
+				  stream<ap_uint<SIMD1*PE1*WIDTH> > & paramStreamOut,
+				  stream<ap_uint<PE1*ACTIVATION_PRECISION> > & out);
 
 int main()
 {
@@ -84,13 +83,12 @@ int main()
 	ap_uint<INPUT_PRECISION*IFM_Channels1> input_channel = 0;
 	for(unsigned int channel = 0; channel < IFM_Channels1; channel++)
 	  {
+	    count = rand();
 	    ap_uint<INPUT_PRECISION> input = (ap_uint<INPUT_PRECISION>)(counter);
 	    IMAGE[n_image][oy*IFMDim1+ox][channel]= input;
 	    input_channel = input_channel >> INPUT_PRECISION;
 	    input_channel(IFM_Channels1*INPUT_PRECISION-1,(IFM_Channels1-1)*INPUT_PRECISION)=input;
-	    // Logging input data to a file
-	    // InpAct_File << hex << (unsigned long long)input << "\n";
-	    counter++;
+	    //counter++;
 	  }
 	input_stream.write(input_channel);
       }
@@ -165,7 +163,7 @@ int main()
 	  ap_uint<ACTIVATION_PRECISION>, ap_uint<WIDTH>>(IMAGE, W1, TEST);
   
   // Calling the HLS test bench
-  Testbench_mvau_stream_binwgt(convInp, paramStreamOut, mvOut, MAX_IMAGES);
+  Testbench_mvau_stream_binwgt(convInp, paramStreamOut, mvOut);
 
   // Converting the output stream
   StreamingDataWidthConverter_Batch<PE1*ACTIVATION_PRECISION, OFM_Channels1*ACTIVATION_PRECISION,

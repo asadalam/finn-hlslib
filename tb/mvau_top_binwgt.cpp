@@ -54,10 +54,10 @@ using namespace hls;
 #include "conv.hpp"
 #include "memdata.h"
 #include "config.h"
+#define numReps 1
 
-void Testbench_mvau_binwgt(stream<ap_uint<SIMD1*INPUT_PRECISION> > & in,
-		    stream<ap_uint<PE1*ACTIVATION_PRECISION> > & out,
-		    unsigned int numReps){
+void Testbench_mvau_binwgt(stream<ap_inp<SIMD1*INPUT_PRECISION> > & in,
+			   stream<ap_out<PE1*ACTIVATION_PRECISION> > & out){
 #pragma HLS DATAFLOW
 
   
@@ -66,10 +66,10 @@ void Testbench_mvau_binwgt(stream<ap_uint<SIMD1*INPUT_PRECISION> > & in,
 
   // Matrix Vector Activation Unit (Batch)
   Matrix_Vector_Activate_Batch<MatrixW, MatrixH, SIMD1, PE1, 1,
-			       Slice<ap_uint<INPUT_PRECISION>>,
-			       Slice<ap_int<ACTIVATION_PRECISION>>,
+			       Slice<ap_inp<INPUT_PRECISION>>,
+			       Slice<ap_out<ACTIVATION_PRECISION>>,
 			       Recast<Binary>>
-    (static_cast<hls::stream<ap_uint<SIMD1*INPUT_PRECISION>>&>(in),
-     static_cast<hls::stream<ap_uint<PE1*ACTIVATION_PRECISION>>&>(out),
-     PARAM::weights, PassThroughActivation<ap_uint<ACTIVATION_PRECISION>>(), numReps*OFMDim1*OFMDim1, ap_resource_lut());  
+    (static_cast<hls::stream<ap_inp<SIMD1*INPUT_PRECISION>>&>(in),
+     static_cast<hls::stream<ap_out<PE1*ACTIVATION_PRECISION>>&>(out),
+     PARAM::weights, PassThroughActivation<ap_out<ACTIVATION_PRECISION>>(), numReps*OFMDim1*OFMDim1, ap_resource_lut());  
 }

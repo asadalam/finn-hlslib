@@ -55,11 +55,11 @@ using namespace hls;
 #include "memdata.h"
 #include "config.h"
 #include "utils.hpp"
+#define numReps 1
 
 void Testbench_mvau_stream_xnor(stream<ap_uint<SIMD1*INPUT_PRECISION> > & in,
 				stream<ap_uint<SIMD1*PE1*WIDTH> > & paramStreamOut,
-				stream<ap_uint<PE1*ACTIVATION_PRECISION> > & out,
-				unsigned int numReps){
+				stream<ap_uint<PE1*ACTIVATION_PRECISION> > & out){
 #pragma HLS DATAFLOW
 
   unsigned const MatrixW = KERNEL_DIM * KERNEL_DIM * IFM_Channels1;

@@ -18,13 +18,22 @@ echo "Generating weights"
 python gen_weigths.py
 echo "Running HLS simulation"
 vivado_hls test_mvau_std.tcl
-#echo "Copying dumped data"
-## cp hls-syn-mvau-std/sol1/csim/build/{inp_act.memh,inp_wgt.memh,out_act.memh} ../../proj/sim/
-## echo "Running behavorial simulation of RTL"
-## cd ../../proj/sim
-## bash mvau_test_v3.sh
-## echo "Synthesizing MVAU RTL"
-## cd ../syn
-## vivado -mode batch -source mvau_synth.tcl
-## cd $FINN_HLS_ROOT/tb
+echo "Copying dumped data"
+cp hls-syn-mvau-std/sol1/csim/build/{inp_act.memh,out_act.memh} ../../proj/sim/
+echo "Running behavorial simulation of RTL"
+cd ../../proj/sim
+bash mvau_test_v3.sh
+if grep -q "Data MisMatch" xsim.log; then
+    echo "RTL simulation failed"
+    exit 0
+elif grep -q "failed" xsim.log; then
+    echo "RTL simulation failed"
+    exit 0
+else
+    echo "RTL simulation successful"
+fi
+echo "Synthesizing MVAU RTL"
+#cd ../syn
+#vivado -mode batch -source mvau_synth.tcl
+cd $FINN_HLS_ROOT/tb
 exit 1

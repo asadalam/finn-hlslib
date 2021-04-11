@@ -64,33 +64,39 @@ using namespace std;
 
 #define MAX_IMAGES 1
 
-void Testbench_mvau_std(stream<ap_uint<SIMD1*INPUT_PRECISION> > & in,
-			stream<ap_uint<PE1*ACTIVATION_PRECISION> > & out);//,			unsigned int numReps);
+void Testbench_mvau_std(stream<ap_inp<SIMD1*INPUT_PRECISION> > & in,
+			stream<ap_out<PE1*ACTIVATION_PRECISION> > & out);//,			unsigned int numReps);
 
 int main()
 {
-  static	ap_uint<INPUT_PRECISION> IMAGE[MAX_IMAGES][IFMDim1*IFMDim1][IFM_Channels1];
-  static	ap_uint<ACTIVATION_PRECISION> TEST[MAX_IMAGES][OFMDim1][OFMDim1][OFM_Channels1];
-  stream<ap_uint<IFM_Channels1*INPUT_PRECISION> > input_stream("input_stream");
-  stream<ap_uint<OFM_Channels1*ACTIVATION_PRECISION> > output_stream("output_stream");
+  
+  static	ap_wgt<WIDTH> W1[OFM_Channels1][KERNEL_DIM][KERNEL_DIM][IFM_Channels1];
+  
+  static	ap_inp<INPUT_PRECISION> IMAGE[MAX_IMAGES][IFMDim1*IFMDim1][IFM_Channels1];
+  static	ap_out<ACTIVATION_PRECISION> TEST[MAX_IMAGES][OFMDim1][OFMDim1][OFM_Channels1];
+  stream<ap_inp<IFM_Channels1*INPUT_PRECISION> > input_stream("input_stream");
+  stream<ap_out<OFM_Channels1*ACTIVATION_PRECISION> > output_stream("output_stream");
   unsigned int counter = 0;
+
+    
   for (unsigned int n_image = 0; n_image < MAX_IMAGES; n_image++) {
     for (unsigned int oy = 0; oy < IFMDim1; oy++) {
       for (unsigned int ox = 0; ox < IFMDim1; ox++) {
-	ap_uint<INPUT_PRECISION*IFM_Channels1> input_channel = 0;
+	ap_inp<INPUT_PRECISION*IFM_Channels1> input_channel = 0;
 	for(unsigned int channel = 0; channel < IFM_Channels1; channel++)
 	  {
-	    ap_uint<INPUT_PRECISION> input = (ap_uint<INPUT_PRECISION>)(counter);
+	    counter = rand();
+	    ap_inp<INPUT_PRECISION> input = (ap_inp<INPUT_PRECISION>)(counter);
 	    IMAGE[n_image][oy*IFMDim1+ox][channel]= input;
 	    input_channel = input_channel >> INPUT_PRECISION;
 	    input_channel(IFM_Channels1*INPUT_PRECISION-1,(IFM_Channels1-1)*INPUT_PRECISION)=input;
-	    counter++;
+	    //counter++;
 	  }
 	input_stream.write(input_channel);
       }
     }
   }
-  static	ap_int<WIDTH> W1[OFM_Channels1][KERNEL_DIM][KERNEL_DIM][IFM_Channels1];
+  
   // initialize the weights
   constexpr int TX = (IFM_Channels1*KERNEL_DIM*KERNEL_DIM) / SIMD1;
   constexpr int TY = OFM_Channels1 / PE1;
@@ -132,9 +138,9 @@ int main()
   unsigned const MatrixH = OFM_Channels1;
   unsigned const InpPerImage = IFMDim1*IFMDim1;
 
-  hls::stream<ap_uint<SIMD1*INPUT_PRECISION> > wa_in("StreamingConvLayer_Batch.wa_in");
-  hls::stream<ap_uint<SIMD1*INPUT_PRECISION> > convInp("StreamingConvLayer_Batch.convInp");
-  hls::stream<ap_uint<PE1*ACTIVATION_PRECISION> > mvOut("StreamingConvLayer_Batch.mvOut");
+  hls::stream<ap_inp<SIMD1*INPUT_PRECISION> > wa_in("StreamingConvLayer_Batch.wa_in");
+  hls::stream<ap_inp<SIMD1*INPUT_PRECISION> > convInp("StreamingConvLayer_Batch.convInp");
+  hls::stream<ap_out<PE1*ACTIVATION_PRECISION> > mvOut("StreamingConvLayer_Batch.mvOut");
 
   StreamingDataWidthConverter_Batch<IFM_Channels1*INPUT_PRECISION, SIMD1*INPUT_PRECISION, InpPerImage>
     (input_stream, wa_in, MAX_IMAGES);
@@ -146,7 +152,7 @@ int main()
   logStringStream<SIMD1*INPUT_PRECISION>("inp_act.memh",convInp);
   
   // Performing Behavioral Convolution
-  conv<MAX_IMAGES,IFMDim1,OFMDim1,IFM_Channels1,OFM_Channels1, KERNEL_DIM, 1, ap_uint<INPUT_PRECISION> >(IMAGE, W1, TEST);
+  conv<MAX_IMAGES,IFMDim1,OFMDim1,IFM_Channels1,OFM_Channels1, KERNEL_DIM, 1, ap_inp<INPUT_PRECISION> >(IMAGE, W1, TEST);
 
   // Calling the HLS test bench
   Testbench_mvau_std(convInp, mvOut);//, MAX_IMAGES);
@@ -160,14 +166,14 @@ int main()
   string out_act_fname = "out_act.memh";
   OutAct_File.open(out_act_fname.c_str());
   int err_counter = 0, err_perimage=0;
-  ap_uint<ACTIVATION_PRECISION> out_chan;
+  ap_out<ACTIVATION_PRECISION> out_chan;
   for (unsigned int n_image = 0; n_image < MAX_IMAGES; n_image++) {
     for (unsigned int oy = 0; oy < OFMDim1; oy++) {
       for (unsigned int ox = 0; ox < OFMDim1; ox++) {
 	for(int e=0;e<1;e++){
-	  ap_uint<OFM_Channels1*ACTIVATION_PRECISION> outElem = output_stream.read();
+	  ap_out<OFM_Channels1*ACTIVATION_PRECISION> outElem = output_stream.read();
 	  for(unsigned int channel = 0; channel < OFM_Channels1; channel++){
-	    ap_uint<ACTIVATION_PRECISION> EXP = TEST[n_image][ox][oy][channel + e * OFM_Channels1];
+	    ap_out<ACTIVATION_PRECISION> EXP = TEST[n_image][ox][oy][channel + e * OFM_Channels1];
 	    out_chan(ACTIVATION_PRECISION-1,0) = outElem((channel + 1)*ACTIVATION_PRECISION-1,channel*ACTIVATION_PRECISION);
 
 	    if (EXP != out_chan){

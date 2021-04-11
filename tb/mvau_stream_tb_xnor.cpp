@@ -69,8 +69,7 @@ using namespace std;
 
 void Testbench_mvau_stream_xnor(stream<ap_uint<SIMD1*INPUT_PRECISION> > & in,
 				stream<ap_uint<SIMD1*PE1*WIDTH> > & paramStreamOut,
-				stream<ap_uint<PE1*ACTIVATION_PRECISION> > & out,
-				unsigned int numReps);
+				stream<ap_uint<PE1*ACTIVATION_PRECISION> > & out);
 int main()
 {
   static	ap_uint<INPUT_PRECISION> IMAGE[MAX_IMAGES][IFMDim1*IFMDim1][IFM_Channels1];
@@ -163,7 +162,7 @@ int main()
 	    ap_uint<ACTIVATION_PRECISION>,ap_uint<WIDTH>>(IMAGE, W1, TEST);
   
   // Calling the HLS test bench
-  Testbench_mvau_stream_xnor(convInp, paramStreamOut, mvOut, MAX_IMAGES);
+  Testbench_mvau_stream_xnor(convInp, paramStreamOut, mvOut);
 
   // Converting the output stream
   StreamingDataWidthConverter_Batch<PE1*ACTIVATION_PRECISION, OFM_Channels1*ACTIVATION_PRECISION,
