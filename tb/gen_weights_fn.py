@@ -34,14 +34,17 @@ import subprocess
 import sys
 import argparse
 import os
+import random
 
-
-def gen_weights(kdim,iwl,ifmc,ofmc,ifmd,owl,wwl,simd,pe,stride=1,mmv=1):
+def gen_weights(mvau_env,kdim,iwl,ifmc,ofmc,ifmd,wwl,owl,simd,pe,stride=1,mmv=1):
     outFileWeights = open("memdata.h" , "wt")
     outFileConfig = open("config.h" , "wt")
-    outFileWeightsFull = open("../../sim/weights_mem_full.memh","wt")
-    outFileWeightsFullSrc_Sim = open("../../sim/weights_mem_full_src.mem","wt")
-    outFileWeightsFullSrc = open("../../src/mvau_top/weights_mem_full_src.mem","wt")
+    outFileWeightsFull_fn = mvau_env+"/proj/sim/weights_mem_full.mem"
+    outFileWeightsFull = open(outFileWeightsFull_fn,"wt")
+    outFileWeightsFullSrc_Sim_fn = mvau_env+"/proj/sim/weights_mem_full_src.mem"
+    outFileWeightsFullSrc_Sim = open(outFileWeightsFullSrc_Sim_fn,"wt")
+    outFileWeightsFullSrc_fn = mvau_env+"/proj/src/mvau_top/weights_mem_full_src.mem"
+    outFileWeightsFullSrc = open(outFileWeightsFullSrc_fn,"wt")
 
     kernel_dim = kdim
     input_precision = iwl
@@ -76,13 +79,34 @@ def gen_weights(kdim,iwl,ifmc,ofmc,ifmd,owl,wwl,simd,pe,stride=1,mmv=1):
     #outFileConfig.write("#define WGT_SIGN %d \n" % wgt_sign)
     
     outFileConfig.write("#define ACTIVATION_PRECISION %d \n" % activation_precision)
+
+    
     if(wgt_sign == 1):
-        outFileConfig.write("typedef ap_int<
+        outFileConfig.write("template <int N>\n")
+        outFileConfig.write("using ap_wgt = ap_int<N>;\n")
+    else:
+        outFileConfig.write("template <int N>\n")
+        outFileConfig.write("using ap_wgt = ap_uint<N>;\n")
+        
+    if(inp_sign == 1):
+        outFileConfig.write("template <int N>\n")
+        outFileConfig.write("using ap_inp = ap_int<N>;\n")
+    else:
+        outFileConfig.write("template <int N>\n")
+        outFileConfig.write("using ap_inp = ap_uint<N>;\n")
+    
+    if(out_sign == 1):
+        outFileConfig.write("template <int N>\n")
+        outFileConfig.write("using ap_out = ap_int<N>;\n")
+    else:
+        outFileConfig.write("template <int N>\n")
+        outFileConfig.write("using ap_out = ap_uint<N>;\n")
 
     outFileConfig.close()
     outFileWeights.write("#ifndef PARAMS_HPP\n")
     outFileWeights.write("#define PARAMS_HPP\n")
 
+    outFileWeights.write("namespace PARAM{ \n")
     if (w_precision == 1):
         outFileWeights.write("static BinaryWeights<%d,%d,%d> weights= {\n{\n" %(simd,pe,tile))
     elif (wgt_sign == 1):
@@ -92,45 +116,49 @@ def gen_weights(kdim,iwl,ifmc,ofmc,ifmd,owl,wwl,simd,pe,stride=1,mmv=1):
 
     weights_dict = dict()
     for p in range(pe):
-	weights_list = []
-	dict_key = p
-	fname_src = "../../proj/src/mvau_top/weight_mem"+str(p)+".memh"
-	fname_sim = "../../proj/sim/weight_mem"+str(p)+".memh"
-	outFileWeightsHexSrc = open(fname_src,"wt")
-	outFileWeightsHexSim = open(fname_sim,"wt")
-	outFileWeights.write("{ \n")
-	for t in range(tile):
-	    width = simd*w_precision;
-	    val = random.randint(0, 1<<width-1)
-	    outFileWeights.write("%s" % hex(val))
-	    formatted_string = format(val,"x")
-	    outFileWeightsHexSrc.write("%s" % formatted_string)
-	    outFileWeightsHexSim.write("%s" % formatted_string)
-	    weights_list.append(formatted_string)
-	    if t!=tile-1:
-		outFileWeights.write(",\n")
-		outFileWeightsHexSrc.write("\n")
-		outFileWeightsHexSim.write("\n")
-	outFileWeights.write("} \n")
-	if p!=pe-1:
-	    outFileWeights.write(",")
-	weights_dict[dict_key] = weights_list
-	outFileWeightsHexSrc.close()
-	outFileWeightsHexSim.close()
+        weights_list = []
+        dict_key = p
+        fname_src = mvau_env+"/proj/src/mvau_top/weight_mem"+str(p)+".memh"
+        fname_sim = mvau_env+"/proj/sim/weight_mem"+str(p)+".memh"
+        outFileWeightsHexSrc = open(fname_src,"wt")
+        outFileWeightsHexSim = open(fname_sim,"wt")
+        outFileWeights.write("{ \n")
+        for t in range(tile):
+            width = simd*w_precision;
+            val = random.randint(0, 1<<width-1)
+            outFileWeights.write("%s" % hex(val))
+            formatted_string = format(val,"x")
+            outFileWeightsHexSrc.write("%s" % formatted_string)
+            outFileWeightsHexSim.write("%s" % formatted_string)
+            outFileWeightsFullSrc.write("%s\n" % formatted_string)
+            outFileWeightsFullSrc_Sim.write("%s\n" % formatted_string)        
+            weights_list.append(formatted_string)
+            if t!=tile-1:
+                outFileWeights.write(",\n")
+                outFileWeightsHexSrc.write("\n")
+                outFileWeightsHexSim.write("\n")
+        outFileWeights.write("} \n")
+        if p!=pe-1:
+            outFileWeights.write(",")
+        weights_dict[dict_key] = weights_list
+        outFileWeightsHexSrc.close()
+        outFileWeightsHexSim.close()
 
     outFileWeights.write("}\n};\n } \n")
     outFileWeights.write("#endif \n")
     outFileWeights.close()
+    outFileWeightsFullSrc.close()
+    outFileWeightsFullSrc_Sim.close()
 
     nf = ofm_channels/pe
     matrix_w = kernel_dim*kernel_dim*ifm_channels // (simd)
 
     for n in np.arange(nf):
         for p in weights_dict:
-	    r = int(len(weights_dict[p])/nf)
-	    for wt in np.arange(r):
-	        k = int(wt+matrix_w*n)
-	        outFileWeightsFull.write("%s\n" % weights_dict[p][k])
+            r = int(len(weights_dict[p])/nf)
+            for wt in np.arange(r):
+                k = int(wt+matrix_w*n)
+                outFileWeightsFull.write("%s\n" % weights_dict[p][k])
 
     outFileWeightsFull.close()
 
@@ -139,26 +167,25 @@ def gen_weights(kdim,iwl,ifmc,ofmc,ifmd,owl,wwl,simd,pe,stride=1,mmv=1):
 
 def parser():
     parser = argparse.ArgumentParser(description='Python data script for Toom Cook 1D convolution using Chebyshev nodes')
-    parser.add_argument('-k','--kdim',default=,type=int,
+    parser.add_argument('-k','--kdim',default=2,type=int,
 			help="2")
-    parser.add_argument('-i','--inp_wl',default=,type=int,
+    parser.add_argument('-i','--inp_wl',default=8,type=int,
 			help="8")
-    parser.add_argument('--ifm_ch', default=1.,type=int,
+    parser.add_argument('--ifm_ch', default=4,type=int,
 			help="4")
-    parser.add_argument('--ofm_ch', default=2., type=int,
+    parser.add_argument('--ofm_ch', default=4, type=int,
 			help="4")
-    parser.add_argument('--ifm_dim', default=1, type=int,
+    parser.add_argument('--ifm_dim', default=4, type=int,
 			help="4")
-    parser.add_argument('-o','--out_wl', default=3, type=int,
-			help="16")
-    parser.add_argument('-s','--simd',default=5000,type=int,
-			help="2")
-    parser.add_argument('-p', '--pe', default=0,type=int,
-			help="2")
-    parser.add_argument('-w','--wgt_wl',default=,type=int,
+    parser.add_argument('-w','--wgt_wl',default=1,type=int,
                         help="1")
+    parser.add_argument('-o','--out_wl', default=16, type=int,
+			help="16")
+    parser.add_argument('-s','--simd',default=2,type=int,
+			help="2")
+    parser.add_argument('-p', '--pe', default=2,type=int,
+			help="2")    
     return parser
-
 
 
 if __name__ == "__main__":
@@ -166,9 +193,12 @@ if __name__ == "__main__":
     ## Reading the argument list passed to this script
     args = parser().parse_args()
 
-    ## Calling the weight generation function
-    gen_weights(args.kdim,args.inp_wl,args.ifm_ch,args.ofm_ch,args.ifm_dim,args.out_wl,args.simd,args.pe,args.wgt_wl)
+    # Getting the environment variable for MVAU root directory (defined in .bashrc)
+    mvau_env = os.environ.get('MVAU_RTL_ROOT')
 
+    ## Calling the weight generation function
+    gen_weights(mvau_env,args.kdim,args.inp_wl,args.ifm_ch,args.ofm_ch,args.ifm_dim,args.wgt_wl,args.out_wl,args.simd,args.pe)
+                            
     sys.exit(0)
 
 

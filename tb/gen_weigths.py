@@ -39,15 +39,15 @@ outFileWeightsFullSim = open("../../sim/weigths_mem_full_sim.mem","wt")
 outFileWeightsFullSrc_Sim = open("../../sim/weights_mem_full_src.mem","wt")
 outFileWeightsFullSrc = open("../../src/mvau_top/weights_mem_full_src.mem","wt")
 
-kernel_dim = 4
+kernel_dim = 2
 stride = 1
-input_precision = 1
+input_precision = 8
 ifm_channels = 4
 ofm_channels = 4
 ifm_dimension = 4
 ofm_dimension = (ifm_dimension-kernel_dim)/stride+1
 
-activation_precision = 12
+activation_precision = 16
 expand = 1
 simd = 2
 pe = 2
