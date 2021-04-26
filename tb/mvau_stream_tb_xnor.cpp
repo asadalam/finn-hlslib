@@ -65,8 +65,9 @@
 using namespace hls;
 using namespace std;
 
-#define MAX_IMAGES 1
-
+#define NUM_IMAGES 1
+#define NUM_EXECUTIONS 2
+#define MAX_IMAGES 2 // INT_IMAGES*NUM_EXECUTIONS
 void Testbench_mvau_stream_xnor(stream<ap_uint<SIMD1*INPUT_PRECISION> > & in,
 				stream<ap_uint<SIMD1*PE1*WIDTH> > & paramStreamOut,
 				stream<ap_uint<PE1*ACTIVATION_PRECISION> > & out);
@@ -141,7 +142,7 @@ int main()
   GenParamStream<TILE1, SIMD1, PE1, WIDTH>(PARAM::weights, paramStreamOut, MAX_IMAGES * OFMDim1 * OFMDim1);
   /***************************************/
   // Dumping the weights to file
-  logStringStream<SIMD1*PE1*WIDTH>("inp_wgt.memh",paramStreamOut);
+  logStringStream<SIMD1*PE1*WIDTH>("inp_wgt.mem",paramStreamOut);
   /**************************************/
   
   hls::stream<ap_uint<SIMD1*INPUT_PRECISION> > wa_in("StreamingConvLayer_Batch.wa_in");
@@ -155,22 +156,23 @@ int main()
     (wa_in, convInp, MAX_IMAGES, ap_resource_dflt());
 
   // Dumping the input activation stream
-  logStringStream<SIMD1*INPUT_PRECISION>("inp_act.memh",convInp);
+  logStringStream<SIMD1*INPUT_PRECISION>("inp_act.mem",convInp);
 
   // Performing Behavioral Convolution
   conv_xnor<MAX_IMAGES,IFMDim1,OFMDim1,IFM_Channels1,OFM_Channels1, KERNEL_DIM, 1, ap_uint<INPUT_PRECISION>,
-	    ap_uint<ACTIVATION_PRECISION>,ap_uint<WIDTH>>(IMAGE, W1, TEST);
+	    ap_uint<ACTIVATION_PRECISION>, ap_uint<WIDTH>>(IMAGE, W1, TEST);
   
-  // Calling the HLS test bench
-  Testbench_mvau_stream_xnor(convInp, paramStreamOut, mvOut);
+  // Calling the HLS test bench twice to populate the II report
+  for(int i = 0; i < NUM_EXECUTIONS; i++) {
+    Testbench_mvau_stream_xnor(convInp, paramStreamOut, mvOut);
+  }
 
   // Converting the output stream
   StreamingDataWidthConverter_Batch<PE1*ACTIVATION_PRECISION, OFM_Channels1*ACTIVATION_PRECISION,
 				    OFMDim1 * OFMDim1 * (OFM_Channels1 / PE1)>(mvOut, output_stream, MAX_IMAGES);
-  
   // File initialization for dumping output activation
   std::ofstream OutAct_File;
-  string out_act_fname = "out_act.memh";
+  string out_act_fname = "out_act.mem";
   OutAct_File.open(out_act_fname.c_str());
   int err_counter = 0, err_perimage=0;
   ap_uint<ACTIVATION_PRECISION> out_chan;

@@ -163,7 +163,9 @@ int main()
 	  ap_uint<ACTIVATION_PRECISION>, ap_uint<WIDTH>>(IMAGE, W1, TEST);
   
   // Calling the HLS test bench
-  Testbench_mvau_stream_binact(convInp, paramStreamOut, mvOut);
+  for(int i = 0; i < 2; i++) {
+    Testbench_mvau_stream_binact(convInp, paramStreamOut, mvOut);
+  }
 
   // Converting the output stream
   StreamingDataWidthConverter_Batch<PE1*ACTIVATION_PRECISION, OFM_Channels1*ACTIVATION_PRECISION,

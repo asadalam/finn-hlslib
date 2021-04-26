@@ -24,8 +24,28 @@ out_wl=${7:-16}
 simd=${8:-2}
 pe=${9:-2}
 python gen_weights_fn.py --ifm_ch ${ifm_ch} --ifm_dim ${ifm_dim} --ofm_ch ${ofm_ch} --kdim ${kdim} --inp_wl ${inp_wl} --wgt_wl ${wgt_wl} --out_wl ${out_wl} --simd ${simd} --pe ${pe}
+if [ $? -eq 0 ]; then
+    echo "Weight generation successfull"
+else
+    echo "Weight generation failed"
+    exit 0
+fi
+
 echo "Running HLS synthesis simulation"
 vivado_hls test_mvau_stream_std.tcl
+if [ $? -eq 0 ]; then
+    echo "HLS run successfull"
+else
+    echo "HLS run failed"
+    exit 0
+fi
+
 echo "Copying dumped data"
-cp hls-syn-mvau-stream-std/sol1/csim/build/{inp_act.memh,inp_wgt.memh,out_act.memh} $MVAU_RTL_ROOT/proj/sim/
+cp hls-syn-mvau-stream-std/sol1/csim/build/{inp_act.mem,inp_wgt.mem,out_act.mem} $MVAU_RTL_ROOT/proj/sim/
+if [ $? -eq 0 ]; then
+    echo "Data successfully copied"
+else
+    echo "Data not copied"
+    exit 0
+fi
 exit 1

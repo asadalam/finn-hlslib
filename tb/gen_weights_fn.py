@@ -118,15 +118,18 @@ def gen_weights(mvau_env,kdim,iwl,ifmc,ofmc,ifmd,wwl,owl,simd,pe,stride=1,mmv=1)
     for p in range(pe):
         weights_list = []
         dict_key = p
-        fname_src = mvau_env+"/proj/src/mvau_top/weight_mem"+str(p)+".memh"
-        fname_sim = mvau_env+"/proj/sim/weight_mem"+str(p)+".memh"
+        fname_src = mvau_env+"/proj/src/mvau_top/weight_mem"+str(p)+".mem"
+        fname_sim = mvau_env+"/proj/sim/weight_mem"+str(p)+".mem"
         outFileWeightsHexSrc = open(fname_src,"wt")
         outFileWeightsHexSim = open(fname_sim,"wt")
         outFileWeights.write("{ \n")
         for t in range(tile):
             width = simd*w_precision;
             val = random.randint(0, 1<<width-1)
-            outFileWeights.write("%s" % hex(val))
+            if(simd*w_precision>64):
+                outFileWeights.write("ap_uint<%d>(\"%s\",16)" %(simd*w_precision,hex(val)))
+            else:
+                outFileWeights.write("%s" % hex(val))
             formatted_string = format(val,"x")
             outFileWeightsHexSrc.write("%s" % formatted_string)
             outFileWeightsHexSim.write("%s" % formatted_string)
@@ -166,25 +169,25 @@ def gen_weights(mvau_env,kdim,iwl,ifmc,ofmc,ifmd,wwl,owl,simd,pe,stride=1,mmv=1)
 
 
 def parser():
-    parser = argparse.ArgumentParser(description='Python data script for Toom Cook 1D convolution using Chebyshev nodes')
+    parser = argparse.ArgumentParser(description='Python data script for generating weights and configuration file for FINN HLS library')
     parser.add_argument('-k','--kdim',default=2,type=int,
-			help="2")
+			help="Filter dimension")
     parser.add_argument('-i','--inp_wl',default=8,type=int,
-			help="8")
+                        help="Input word length")
     parser.add_argument('--ifm_ch', default=4,type=int,
-			help="4")
+			help="Input feature map channels")
     parser.add_argument('--ofm_ch', default=4, type=int,
-			help="4")
+			help="Output feature map channels")
     parser.add_argument('--ifm_dim', default=4, type=int,
-			help="4")
+			help="Input feature map dimensions")
     parser.add_argument('-w','--wgt_wl',default=1,type=int,
-                        help="1")
+                        help="Weight word length")
     parser.add_argument('-o','--out_wl', default=16, type=int,
-			help="16")
+			help="Output word length")
     parser.add_argument('-s','--simd',default=2,type=int,
-			help="2")
+			help="SIMD")
     parser.add_argument('-p', '--pe', default=2,type=int,
-			help="2")    
+			help="PE")
     return parser
 
 

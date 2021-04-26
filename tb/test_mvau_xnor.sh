@@ -15,25 +15,38 @@ else
     echo "Project folder does not exist";
 fi
 echo "Generating weights"
-python gen_weigths.py
+### Default arguments for gen_weights_fn.py
+ifm_ch=${1:-4}
+ifm_dim=${2:-4}
+ofm_ch=${3:-4}
+kdim=${4:-2}
+inp_wl=${5:-8}
+wgt_wl=${6:-1}
+out_wl=${7:-16}
+simd=${8:-2}
+pe=${9:-2}
+python gen_weights_fn.py --ifm_ch ${ifm_ch} --ifm_dim ${ifm_dim} --ofm_ch ${ofm_ch} --kdim ${kdim} --inp_wl ${inp_wl} --wgt_wl ${wgt_wl} --out_wl ${out_wl} --simd ${simd} --pe ${pe}
+if [ $? -eq 0 ]; then
+    echo "Weight generation successfull"
+else
+    echo "Weight generation failed"
+    exit 0
+fi
+
 echo "Running HLS simulation"
 vivado_hls test_mvau_xnor.tcl
-echo "Copying dumped data"
-cp hls-syn-mvau-xnor/sol1/csim/build/{inp_act.memh,out_act.memh} ../../proj/sim/
-echo "Running behavorial simulation of RTL"
-cd ../../proj/sim
-bash mvau_test_v3.sh
-if grep -q "Data MisMatch" xsim.log; then
-    echo "RTL simulation failed"
-    exit 0
-elif grep -q "failed" xsim.log; then
-    echo "RTL simulation failed"
-    exit 0
+if [ $? -eq 0 ]; then
+    echo "HLS run successfull"
 else
-    echo "RTL simulation successful"
+    echo "HLS run failed"
+    exit 0
 fi
-#echo "Synthesizing MVAU RTL"
-#cd ../syn
-#vivado -mode batch -source mvau_synth.tcl
-cd $FINN_HLS_ROOT/tb
+echo "Copying dumped data"
+cp hls-syn-mvau-xnor/sol1/csim/build/{inp_act.mem,out_act.mem} ${MVAU_RTL_ROOT}/proj/sim/
+if [ $? -eq 0 ]; then
+    echo "Data successfully copied"
+else
+    echo "Data not copied"
+    exit 0
+fi
 exit 1

@@ -62,7 +62,9 @@
 using namespace hls;
 using namespace std;
 
-#define MAX_IMAGES 1
+#define NUM_IMAGES 1
+#define NUM_EXECUTIONS 2
+#define MAX_IMAGES 2 // INT_IMAGES*NUM_EXECUTIONS
 
 void Testbench_mvau_binwgt(stream<ap_inp<SIMD1*INPUT_PRECISION> > & in,
 			   stream<ap_out<PE1*ACTIVATION_PRECISION> > & out);
@@ -74,7 +76,7 @@ int main()
   stream<ap_inp<IFM_Channels1*INPUT_PRECISION> > input_stream("input_stream");
   stream<ap_out<OFM_Channels1*ACTIVATION_PRECISION> > output_stream("output_stream");
   unsigned int counter = 0;
-
+  unsigned int cnt = 0;
   for (unsigned int n_image = 0; n_image < MAX_IMAGES; n_image++) {
     for (unsigned int oy = 0; oy < IFMDim1; oy++) {
       for (unsigned int ox = 0; ox < IFMDim1; ox++) {
@@ -83,9 +85,11 @@ int main()
 	  {
 	    counter = rand();
 	    ap_inp<INPUT_PRECISION> input = (ap_inp<INPUT_PRECISION>)(counter);
+	    //std::cout<<"Input " << cnt << ": " << input << std::endl;
 	    IMAGE[n_image][oy*IFMDim1+ox][channel]= input;
 	    input_channel = input_channel >> INPUT_PRECISION;
 	    input_channel(IFM_Channels1*INPUT_PRECISION-1,(IFM_Channels1-1)*INPUT_PRECISION)=input;
+	    cnt++;
 	    //counter++;
 	  }
 	input_stream.write(input_channel);
@@ -145,13 +149,15 @@ int main()
     (wa_in, convInp, MAX_IMAGES, ap_resource_dflt());
 
   // Dumping the input activation stream
-  logStringStream<SIMD1*INPUT_PRECISION>("inp_act.memh",convInp);
+  logStringStream<SIMD1*INPUT_PRECISION>("inp_act.mem",convInp);
   
   // Performing Behavioral Convolution
   conv_w1<MAX_IMAGES,IFMDim1,OFMDim1,IFM_Channels1,OFM_Channels1, KERNEL_DIM, 1, ap_inp<INPUT_PRECISION> >(IMAGE, W1, TEST);
 
-  // Calling the HLS test bench
-  Testbench_mvau_binwgt(convInp, mvOut);
+  // Calling the HLS test bench twice to populate the II report
+  for(int i = 0; i < NUM_EXECUTIONS; i++) {
+    Testbench_mvau_binwgt(convInp, mvOut);
+  }
   
   // Converting the output stream
   StreamingDataWidthConverter_Batch<PE1*ACTIVATION_PRECISION, OFM_Channels1*ACTIVATION_PRECISION,
@@ -159,7 +165,7 @@ int main()
 
   // File initialization for dumping output activation
   std::ofstream OutAct_File;
-  string out_act_fname = "out_act.memh";
+  string out_act_fname = "out_act.mem";
   OutAct_File.open(out_act_fname.c_str());
   int err_counter = 0, err_perimage=0;
   ap_out<ACTIVATION_PRECISION> out_chan;

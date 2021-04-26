@@ -39,19 +39,19 @@ outFileWeightsFullSim = open("../../sim/weigths_mem_full_sim.mem","wt")
 outFileWeightsFullSrc_Sim = open("../../sim/weights_mem_full_src.mem","wt")
 outFileWeightsFullSrc = open("../../src/mvau_top/weights_mem_full_src.mem","wt")
 
-kernel_dim = 2
+kernel_dim = 4
 stride = 1
-input_precision = 8
-ifm_channels = 4
-ofm_channels = 4
-ifm_dimension = 4
+input_precision = 4
+ifm_channels = 64
+ofm_channels = 64
+ifm_dimension = 32
 ofm_dimension = (ifm_dimension-kernel_dim)/stride+1
 
 activation_precision = 16
 expand = 1
-simd = 2
-pe = 2
-w_precision = 1
+simd = 32
+pe = 64
+w_precision = 4
 mmv=1
 wgt_sign = 0
 inp_sign = 0
@@ -113,8 +113,8 @@ weights_dict = dict()
 for p in range(pe):
     weights_list = []
     dict_key = p
-    fname_src = "../../src/mvau_top/weight_mem"+str(p)+".memh"
-    fname_sim = "../../sim/weight_mem"+str(p)+".memh"
+    fname_src = "../../src/mvau_top/weight_mem"+str(p)+".mem"
+    fname_sim = "../../sim/weight_mem"+str(p)+".mem"
     outFileWeightsHexSrc = open(fname_src,"wt")
     outFileWeightsHexSim = open(fname_sim,"wt")
     outFileWeights.write("{ \n")
