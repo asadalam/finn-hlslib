@@ -49,17 +49,17 @@ create_clock -period 5 -name default
 ## C-simulation
 csim_design
 ## Synthesizing HLS and finding synthesis execution time
-# set t0 [clock clicks -milliseconds]
-# csynth_design
-# set t1 [expr {([clock clicks -milliseconds] - $t0)/1000.}]
-# ## Co-simulation (C+HLS generated RTL)
-# cosim_design
-# ## Exporting design for analysis
-# set t2 [clock clicks -milliseconds]
-# export_design -flow syn -rtl verilog -format ip_catalog
-# set t3 [expr {([clock clicks -milliseconds] - $t2)/1000.}]
-# set t4 [expr {$t1 + $t3}]
-# set outfile [open "hls_exec.rpt" w]
-# puts $outfile $t4
-# close $outfile
+set t0 [clock clicks -milliseconds]
+csynth_design
+set t1 [expr {([clock clicks -milliseconds] - $t0)/1000.}]
+## Co-simulation (C+HLS generated RTL)
+cosim_design
+## Exporting design for analysis
+set t2 [clock clicks -milliseconds]
+export_design -flow syn -rtl verilog -format ip_catalog
+set t3 [expr {([clock clicks -milliseconds] - $t2)/1000.}]
+set t4 [expr {$t1 + $t3}]
+set outfile [open "hls_exec.rpt" w]
+puts $outfile $t4
+close $outfile
 exit
