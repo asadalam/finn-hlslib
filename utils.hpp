@@ -93,9 +93,7 @@ void logStringStream(const char *layer_name, hls::stream<ap_uint<BitWidth> > &lo
   std::cout << std::hex;
   while(!log.empty()){
     ap_uint<BitWidth> tmp = (ap_uint<BitWidth>) log.read();
-    //unsigned long long tmp2 = (unsigned long long)tmp;
     ofs << std::hex << tmp << std::endl;
-    //ofs << tmp << std::endl;
     tmp_stream.write(tmp);
   }
 
