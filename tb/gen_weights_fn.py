@@ -126,10 +126,10 @@ def gen_weights(mvau_env,kdim,iwl,ifmc,ofmc,ifmd,wwl,owl,simd,pe,stride=1,mmv=1)
         for t in range(tile):
             width = simd*w_precision;
             val = random.randint(0, 1<<width-1)
-            ## if(simd*w_precision>64):
-            ##     outFileWeights.write("ap_uint<%d>(\"%s\",16)" %(simd*w_precision,hex(val)))
-            ## else:
-            outFileWeights.write("%s" % hex(val))
+            if(simd*w_precision>64):
+                outFileWeights.write("ap_uint<%d>(\"%s\",16)" %(simd*w_precision,hex(val)))
+            else:
+                outFileWeights.write("%s" % hex(val))
             formatted_string = format(val,"x")
             outFileWeightsHexSrc.write("%s" % formatted_string)
             outFileWeightsHexSim.write("%s" % formatted_string)
