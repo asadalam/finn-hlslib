@@ -66,7 +66,8 @@ using namespace std;
 #define NUM_EXECUTIONS 2
 #define MAX_IMAGES 2 // INT_IMAGES*NUM_EXECUTIONS
 void Testbench_mvau_std(stream<ap_inp<SIMD1*INPUT_PRECISION> > & in,
-			stream<ap_out<PE1*ACTIVATION_PRECISION> > & out);//,			unsigned int numReps);
+			stream<ap_out<PE1*ACTIVATION_PRECISION> > & out);
+//			unsigned int numReps);
 
 int main()
 {

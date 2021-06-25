@@ -55,6 +55,7 @@ using namespace hls;
 #include "memdata.h"
 #include "config.h"
 #define numReps 1
+#define AP_INT_MAX_W 16384
 
 void Testbench_mvau_binwgt(stream<ap_inp<SIMD1*INPUT_PRECISION> > & in,
 			   stream<ap_out<PE1*ACTIVATION_PRECISION> > & out){

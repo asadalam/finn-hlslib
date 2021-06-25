@@ -82,12 +82,12 @@ int main()
 	ap_inp<INPUT_PRECISION*IFM_Channels1> input_channel = 0;
 	for(unsigned int channel = 0; channel < IFM_Channels1; channel++)
 	  {
-	    //counter = rand();
+	    counter = rand();
 	    ap_inp<INPUT_PRECISION> input = (ap_inp<INPUT_PRECISION>)(counter);
 	    IMAGE[n_image][oy*IFMDim1+ox][channel]= input;
 	    input_channel = input_channel >> INPUT_PRECISION;
 	    input_channel(IFM_Channels1*INPUT_PRECISION-1,(IFM_Channels1-1)*INPUT_PRECISION)=input;
-	    counter++;
+	    //counter++;
 	  }
 	input_stream.write(input_channel);
       }

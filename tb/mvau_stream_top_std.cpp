@@ -45,6 +45,7 @@ using namespace hls;
 #include "ap_int.h"
 #include "bnn-library.h"
 
+#define AP_INT_MAX_W 16384
 #include "activations.hpp"
 #include "weights.hpp"
 #include "activations.hpp"
@@ -56,6 +57,7 @@ using namespace hls;
 #include "config.h"
 #include "utils.hpp"
 #define numReps 1
+
 
 void Testbench_mvau_stream_std(stream<ap_uint<SIMD1*INPUT_PRECISION> > & in,
 		    stream<ap_uint<SIMD1*PE1*WIDTH> > & paramStreamOut,
