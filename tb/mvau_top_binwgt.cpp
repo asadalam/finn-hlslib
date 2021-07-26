@@ -42,9 +42,9 @@
  *****************************************************************************/
 #include <hls_stream.h>
 using namespace hls;
+#define AP_INT_MAX_W 16384
 #include "ap_int.h"
 #include "bnn-library.h"
-
 #include "activations.hpp"
 #include "weights.hpp"
 #include "activations.hpp"
@@ -55,12 +55,20 @@ using namespace hls;
 #include "memdata.h"
 #include "config.h"
 #define numReps 1
-#define AP_INT_MAX_W 16384
 
 void Testbench_mvau_binwgt(stream<ap_inp<SIMD1*INPUT_PRECISION> > & in,
 			   stream<ap_out<PE1*ACTIVATION_PRECISION> > & out){
-#pragma HLS DATAFLOW
 
+
+#pragma HLS INTERFACE axis port=in
+#pragma HLS INTERFACE axis port=out
+#pragma HLS stream depth=2 variable=in0
+#pragma HLS stream depth=2 variable=out
+#pragma HLS INTERFACE ap_ctrl_none port=return
+
+#pragma HLS ARRAY_PARTITION variable=weights.m_weights complete dim=1
+
+#pragma HLS DATAFLOW
   
   unsigned const MatrixW = KERNEL_DIM * KERNEL_DIM * IFM_Channels1;
   unsigned const MatrixH = OFM_Channels1;

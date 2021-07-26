@@ -34,17 +34,17 @@
  *  Authors: Syed Asad Alam <syed.asad.alam@tcd.ie>
  *           Giulio Gambardella <giuliog@xilinx.com>
  *
- *  \file mvau_top_xnor.cpp
+ *  \file mvau_act_top_std.cpp
  *
- *  HLS Top function with a single matrix vector activation batch unit
- *  for unit testing using 1-bit weights and input activation
+ *  HLS Top function with a single threshold activation unit with fixed point
+ *  input and output
  *
  *****************************************************************************/
 #include <hls_stream.h>
 using namespace hls;
+#define AP_INT_MAX_W 16384
 #include "ap_int.h"
 #include "bnn-library.h"
-
 #include "activations.hpp"
 #include "weights.hpp"
 #include "activations.hpp"
@@ -52,30 +52,27 @@ using namespace hls;
 #include "dma.h"
 #include "mvau.hpp"
 #include "conv.hpp"
-#include "memdata.h"
+//#include "memdata.h"
 #include "config.h"
-#define numReps 1 // THIS MUST BE THE SAME AS NUM_IMAGES
-#define AP_INT_MAX_W 16384
+#define numReps 1
 
-void Testbench_mvau_xnor(stream<ap_inp<SIMD1*INPUT_PRECISION> > & in,
-			 stream<ap_out<PE1*ACTIVATION_PRECISION> > & out){
+void MVAU_ThresholdingBatch3_std(stream<ap_inp<PE1*ACTIVATION_PRECISION> > & in,
+				stream<ap_out<PE1*INPUT_PRECISION> > & out)
+//			unsigned int numReps)
+{
 #pragma HLS INTERFACE axis port=in
 #pragma HLS INTERFACE axis port=out
-#pragma HLS stream depth=2 variable=in0
+#pragma HLS stream depth=2 variable=in
 #pragma HLS stream depth=2 variable=out
 #pragma HLS INTERFACE ap_ctrl_none port=return
-
-#pragma HLS ARRAY_PARTITION variable=weights.m_weights complete dim=1
+#include "thresh.h"
+#pragma HLS ARRAY_PARTITION variable=threshs.m_thresholds complete dim=1
+#pragma HLS ARRAY_PARTITION variable=threshs.m_thresholds complete dim=3
 
 #pragma HLS DATAFLOW
-  
-  unsigned const MatrixW = KERNEL_DIM * KERNEL_DIM * IFM_Channels1;
-  unsigned const MatrixH = OFM_Channels1;
 
-  // Matrix Vector Activation Unit (Batch)
-  Matrix_Vector_Activate_Batch<MatrixW, MatrixH, SIMD1, PE1, 1,
-			       Recast<XnorMul>, Slice<ap_out<ACTIVATION_PRECISION>>, Identity>
-    (static_cast<hls::stream<ap_inp<SIMD1*INPUT_PRECISION>>&>(in),
-     static_cast<hls::stream<ap_out<PE1*ACTIVATION_PRECISION>>&>(out),
-     PARAM::weights, PassThroughActivation<ap_out<ACTIVATION_PRECISION>>(), numReps*OFMDim1*OFMDim1, ap_resource_lut());  
+  // Activation Batch
+  Thresholding_Batch<IFMDim1,OFM_Channels1,PE1,
+		     Slice<ap_out<ACTIVATION_PRECISION>>, Slice<ap_inp<INPUT_PRECISION>> >
+    (in,out,threshs, numReps*OFMDim1*OFMDim1);
 }

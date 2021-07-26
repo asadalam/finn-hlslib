@@ -64,7 +64,7 @@ using namespace std;
 
 #define NUM_IMAGES 1
 #define NUM_EXECUTIONS 2
-#define MAX_IMAGES 2 // INT_IMAGES*NUM_EXECUTIONS
+#define MAX_IMAGES 2 // NUM_IMAGES*NUM_EXECUTIONS
 void Testbench_mvau_std(stream<ap_inp<SIMD1*INPUT_PRECISION> > & in,
 			stream<ap_out<PE1*ACTIVATION_PRECISION> > & out);
 //			unsigned int numReps);
@@ -152,6 +152,7 @@ int main()
 
   // Dumping the input activation stream
   logStringStream<SIMD1*INPUT_PRECISION>("inp_act.mem",convInp);
+  //logStringStream<SIMD1*INPUT_PRECISION>("inp_act.mem",wa_in);
   
   // Performing Behavioral Convolution
   conv<MAX_IMAGES,IFMDim1,OFMDim1,IFM_Channels1,OFM_Channels1, KERNEL_DIM, 1, ap_inp<INPUT_PRECISION> >(IMAGE, W1, TEST);
@@ -159,6 +160,7 @@ int main()
   // Calling the HLS test bench twice to populate the II report
   for(int i = 0; i < NUM_EXECUTIONS; i++) {
     Testbench_mvau_std(convInp, mvOut);//, MAX_IMAGES);
+    //Testbench_mvau_batch1_std(wa_in, mvOut);//, MAX_IMAGES);
   }
   
   // Converting the output stream
