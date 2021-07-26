@@ -29,31 +29,13 @@
  *  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  ******************************************************************************/
-/******************************************************************************
- *
- *  Authors: Giulio Gambardella <giuliog@xilinx.com>
- *
- *  \file conv_top.cpp
- *
- *  HLS Top function with a single convolutional layer for unit testing
- *
- *****************************************************************************/
-#include <hls_stream.h>
-using namespace hls;
-#include "ap_int.h"
-#include "bnn-library.h"
+#define SIMD 2
+#define KERNEL_DIM 3
+#define IFM_Channels 2
+#define IFMDim 9
+#define OFMDim 4
+#define STRIDE 2
+#define INPUT_PRECISION 8
+#define MMV 2
+#define INPUT_MULTIPLIER 1
 
-#include "activations.hpp"
-#include "weights.hpp"
-#include "activations.hpp"
-#include "interpret.hpp"
-#include "mvau.hpp"
-#include "conv.hpp"
-#include "memdata.h"
-#include "config.h"
-#include "utils.hpp"
-
-void Testbench_conv(stream<ap_uint<IFM_Channels1*INPUT_PRECISION> > & in, stream<ap_uint<OFM_Channels1*ACTIVATION_PRECISION> > & out, unsigned int numReps){
-#pragma HLS DATAFLOW
-	ConvLayer_Batch<KERNEL_DIM, IFM_Channels1, IFMDim1, OFM_Channels1, OFMDim1, SIMD1, PE1, Slice<ap_uint<INPUT_PRECISION> >, Slice<ap_uint<ACTIVATION_PRECISION> >, Identity >(in, out, PARAM::weights, PassThroughActivation<ap_uint<16>>(), numReps, ap_resource_dsp());
-}

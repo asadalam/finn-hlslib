@@ -1,5 +1,5 @@
 /******************************************************************************
- *  Copyright (c) 2019, Xilinx, Inc.
+ *  Copyright (c) 2021, Xilinx, Inc.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -31,11 +31,12 @@
  ******************************************************************************/
 /******************************************************************************
  *
- *  Authors: Giulio Gambardella <giuliog@xilinx.com>
+ *  Authors: Timoteo Garcia Bertoa <timoteog@xilinx.com>
  *
- *  \file conv_top.cpp
+ *  \file conv_stmr_top.cpp
  *
  *  HLS Top function with a single convolutional layer for unit testing
+ *  including TMR check
  *
  *****************************************************************************/
 #include <hls_stream.h>
@@ -49,11 +50,26 @@ using namespace hls;
 #include "interpret.hpp"
 #include "mvau.hpp"
 #include "conv.hpp"
-#include "memdata.h"
-#include "config.h"
-#include "utils.hpp"
+#include "memdata_inj.h"
+#include "config_inj.h"
 
-void Testbench_conv(stream<ap_uint<IFM_Channels1*INPUT_PRECISION> > & in, stream<ap_uint<OFM_Channels1*ACTIVATION_PRECISION> > & out, unsigned int numReps){
+void Testbench_conv_inj_stmr(stream<ap_uint<IFM_Channels1*INPUT_PRECISION> > & in,
+						 stream<ap_uint<(OFM_Channels1-NUM_RED*(REDF-1))*ACTIVATION_PRECISION> > & out,
+						 unsigned int numReps,
+						 ap_uint<2> &errortype){
 #pragma HLS DATAFLOW
-	ConvLayer_Batch<KERNEL_DIM, IFM_Channels1, IFMDim1, OFM_Channels1, OFMDim1, SIMD1, PE1, Slice<ap_uint<INPUT_PRECISION> >, Slice<ap_uint<ACTIVATION_PRECISION> >, Identity >(in, out, PARAM::weights, PassThroughActivation<ap_uint<16>>(), numReps, ap_resource_dsp());
+	ConvLayer_Batch_TMR<KERNEL_DIM,
+						IFM_Channels1,
+						IFMDim1,
+						OFM_Channels1,
+						OFMDim1,
+						SIMD1,
+						PE1,
+						NUM_RED,
+						REDF,
+						MAX_CH_WIDTH,
+						Slice<ap_uint<INPUT_PRECISION> >,
+						Slice<ap_int<ACTIVATION_PRECISION> >,
+						Identity >
+	(in, out, PARAM::weights, PassThroughActivation<ap_uint<ACTIVATION_PRECISION>>(), numReps, ap_resource_dsp(), errortype, PARAM::channel_mask, PARAM::red_ch_index);
 }

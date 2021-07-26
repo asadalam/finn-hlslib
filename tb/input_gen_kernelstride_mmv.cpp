@@ -33,27 +33,36 @@
  *
  *  Authors: Giulio Gambardella <giuliog@xilinx.com>
  *
- *  \file conv_top.cpp
+ *  \file input_gen_kernelstride_mmv.cpp
  *
- *  HLS Top function with a single convolutional layer for unit testing
+ *  HLS Top function with a single HLS sliding-window generator block (when kernel%stride !=0) unit testing with MMV support
  *
  *****************************************************************************/
 #include <hls_stream.h>
 using namespace hls;
 #include "ap_int.h"
 #include "bnn-library.h"
+#include "input_gen_kernelstride_mmv.h"
 
-#include "activations.hpp"
-#include "weights.hpp"
-#include "activations.hpp"
-#include "interpret.hpp"
-#include "mvau.hpp"
-#include "conv.hpp"
-#include "memdata.h"
-#include "config.h"
-#include "utils.hpp"
-
-void Testbench_conv(stream<ap_uint<IFM_Channels1*INPUT_PRECISION> > & in, stream<ap_uint<OFM_Channels1*ACTIVATION_PRECISION> > & out, unsigned int numReps){
+void Testbench(stream<ap_uint<IFM_Channels*INPUT_PRECISION> > & in, stream<ap_uint<IFM_Channels*INPUT_PRECISION*MMV> > & out, unsigned int numReps)
+{
 #pragma HLS DATAFLOW
-	ConvLayer_Batch<KERNEL_DIM, IFM_Channels1, IFMDim1, OFM_Channels1, OFMDim1, SIMD1, PE1, Slice<ap_uint<INPUT_PRECISION> >, Slice<ap_uint<ACTIVATION_PRECISION> >, Identity >(in, out, PARAM::weights, PassThroughActivation<ap_uint<16>>(), numReps, ap_resource_dsp());
+stream<ap_uint<SIMD*INPUT_PRECISION> > in_simd("in_simd");
+stream<MultiChanData<MMV, SIMD *INPUT_PRECISION> > out_simd("out_simd");
+stream<MultiChanData<MMV, IFM_Channels*INPUT_PRECISION> > dwc2flat("dwc2flat");
+
+StreamingDataWidthConverter_Batch<IFM_Channels*INPUT_PRECISION, SIMD*INPUT_PRECISION, IFMDim*IFMDim>(in, in_simd, numReps);
+
+ConvolutionInputGenerator_kernel_stride_MMV<KERNEL_DIM,
+	IFM_Channels,
+	INPUT_PRECISION,
+	IFMDim, 
+	OFMDim, 
+	SIMD,
+	STRIDE, 
+	MMV>(in_simd, out_simd, numReps, ap_resource_dflt());
+MultiChanDataWidthConverter_Batch<SIMD*INPUT_PRECISION, IFM_Channels*INPUT_PRECISION,  OFMDim/MMV * OFMDim * KERNEL_DIM * KERNEL_DIM *IFM_Channels/SIMD, MMV>(out_simd, dwc2flat, numReps);
+
+FlattenMultiChanData<MMV, IFM_Channels*INPUT_PRECISION>(dwc2flat, out, KERNEL_DIM*KERNEL_DIM*OFMDim/MMV*OFMDim*numReps);
 }
+
