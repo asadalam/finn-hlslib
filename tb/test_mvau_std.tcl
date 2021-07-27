@@ -65,4 +65,4 @@ set t4 [expr {$t1 + $t3}]
 set outfile [open "hls_exec.rpt" w]
 puts $outfile $t4
 close $outfile
-exit
+exit 0
