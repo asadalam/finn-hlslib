@@ -7,7 +7,7 @@
 # 4) Copy the dumped files to RTL simulation folder
 # 5) For weight files, only copy the first ${1} lines which equates (kernel_dim*kernel_dim*ifm_channels*ofm_channels)/(pe*simd)
 
-WORKING_DIR=hls-syn-mvau-batch1-std
+WORKING_DIR=hls-syn-mvau-std
 if [ -d ${WORKING_DIR} ]; then
     echo "Removing project folder";
     rm -Rf ${WORKING_DIR};
@@ -43,7 +43,7 @@ else
     exit 0
 fi
 echo "Copying dumped data"
-cp hls-syn-mvau-batch1-std/sol1/csim/build/{inp_act.mem,out_act.mem} ${MVAU_RTL_ROOT}/proj/sim/
+cp hls-syn-mvau-std/sol1/csim/build/{inp_act.mem,out_act.mem} ${MVAU_RTL_ROOT}/proj/sim/
 if [ $? -eq 0 ]; then
     echo "Data successfully copied"
 else
