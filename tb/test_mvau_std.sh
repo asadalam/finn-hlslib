@@ -35,7 +35,7 @@ fi
 #cp params.h memdata.h
 
 echo "Running HLS simulation"
-vivado_hls test_mvau_std.tcl
+vivado_hls -f test_mvau_std.tcl
 if [ $? -eq 0 ]; then
     echo "HLS run successfull"
 else

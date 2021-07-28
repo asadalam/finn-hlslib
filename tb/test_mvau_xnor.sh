@@ -34,7 +34,7 @@ else
 fi
 
 echo "Running HLS simulation"
-vivado_hls test_mvau_xnor.tcl
+vivado_hls -f test_mvau_xnor.tcl
 if [ $? -eq 0 ]; then
     echo "HLS run successfull"
 else
