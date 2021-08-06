@@ -40,11 +40,11 @@
  *  for unit testing using 1-bit weights and input activation
  *
  *****************************************************************************/
+#define AP_INT_MAX_W 16384
 #include <hls_stream.h>
 using namespace hls;
 #include "ap_int.h"
 #include "bnn-library.h"
-
 #include "activations.hpp"
 #include "weights.hpp"
 #include "activations.hpp"
@@ -55,7 +55,6 @@ using namespace hls;
 #include "memdata.h"
 #include "config.h"
 #define numReps 1 // THIS MUST BE THE SAME AS NUM_IMAGES
-#define AP_INT_MAX_W 16384
 
 void Testbench_mvau_xnor(stream<ap_inp<SIMD1*INPUT_PRECISION> > & in,
 			 stream<ap_out<PE1*ACTIVATION_PRECISION> > & out){

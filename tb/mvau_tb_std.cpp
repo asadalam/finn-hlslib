@@ -39,6 +39,7 @@
  *  Testbench for the Matrix Vector Activation Batch Unit HLS block
  *
  *****************************************************************************/
+#define AP_INT_MAX_W 16384
 #include <iostream>
 #include <fstream>
 #include <time.h>
@@ -47,7 +48,6 @@
 #include <cstring>
 #include <hls_stream.h>
 #include <cstdlib>
-#define AP_INT_MAX_W 16384
 #include "ap_int.h"
 #include "weights.hpp"
 #include "bnn-library.h"
@@ -59,6 +59,8 @@
 #include "interpret.hpp"
 #include "mvau.hpp"
 #include "conv.hpp"
+
+
 using namespace hls;
 using namespace std;
 

@@ -40,11 +40,11 @@
  *  for  unit testing with single bit  weight and input activation
  *
  *****************************************************************************/
+#define AP_INT_MAX_W 16384
 #include <hls_stream.h>
 using namespace hls;
 #include "ap_int.h"
 #include "bnn-library.h"
-
 #include "activations.hpp"
 #include "weights.hpp"
 #include "activations.hpp"
@@ -56,21 +56,28 @@ using namespace hls;
 #include "config.h"
 #include "utils.hpp"
 #define numReps 1
-#define AP_INT_MAX_W 16384
 
-void Testbench_mvau_stream_binwgt(stream<ap_uint<SIMD1*INPUT_PRECISION> > & in,
-				  stream<ap_uint<SIMD1*PE1*WIDTH> > & paramStreamOut,
-				  stream<ap_uint<PE1*ACTIVATION_PRECISION> > & out){
+void Testbench_mvau_stream_binwgt(stream<ap_inp<SIMD1*INPUT_PRECISION> > & in,
+				  stream<ap_wgt<SIMD1*PE1*WIDTH> > & paramStreamOut,
+				  stream<ap_out<PE1*ACTIVATION_PRECISION> > & out){
+#pragma HLS INTERFACE axis port=in
+#pragma HLS INTERFACE axis port=out
+#pragma HLS INTERFACE axis port=paramStreamOut
+#pragma HLS stream depth=2 variable=in
+#pragma HLS stream depth=2 variable=out
+#pragma HLS stream depth=2 variable=paramStreamOut
+#pragma HLS INTERFACE ap_ctrl_none port=return
+
 #pragma HLS DATAFLOW
 
   unsigned const MatrixW = KERNEL_DIM * KERNEL_DIM * IFM_Channels1;
   unsigned const MatrixH = OFM_Channels1;
   
   Matrix_Vector_Activate_Stream_Batch<MatrixW, MatrixH, SIMD1, PE1,
-				      Slice<ap_uint<INPUT_PRECISION>>,
-				      Slice<ap_uint<ACTIVATION_PRECISION>>,
-				      Recast<Binary>, ap_uint<WIDTH>>
-    (    static_cast<hls::stream<ap_uint<SIMD1*INPUT_PRECISION>>&>(in),
-         static_cast<hls::stream<ap_uint<PE1*ACTIVATION_PRECISION>>&>  (out),
-         paramStreamOut, PassThroughActivation<ap_uint<ACTIVATION_PRECISION>>(), numReps* OFMDim1 * OFMDim1, ap_resource_lut()    );
+				      Slice<ap_inp<INPUT_PRECISION>>,
+				      Slice<ap_out<ACTIVATION_PRECISION>>,
+				      Recast<Binary>, ap_wgt<WIDTH>>
+    (    static_cast<hls::stream<ap_inp<SIMD1*INPUT_PRECISION>>&>(in),
+         static_cast<hls::stream<ap_out<PE1*ACTIVATION_PRECISION>>&>  (out),
+         paramStreamOut, PassThroughActivation<ap_out<ACTIVATION_PRECISION>>(), numReps* OFMDim1 * OFMDim1, ap_resource_lut()    );
 }

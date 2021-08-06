@@ -40,9 +40,9 @@
  *  for unit testing
  *
  *****************************************************************************/
+#define AP_INT_MAX_W 16384
 #include <hls_stream.h>
 using namespace hls;
-#define AP_INT_MAX_W 16384
 #include "ap_int.h"
 #include "bnn-library.h"
 #include "activations.hpp"
@@ -55,6 +55,7 @@ using namespace hls;
 #include "memdata.h"
 #include "config.h"
 #define numReps 1
+
 
 void Testbench_mvau_std(stream<ap_inp<SIMD1*INPUT_PRECISION> > & in,
 			stream<ap_out<PE1*ACTIVATION_PRECISION> > & out)
@@ -79,6 +80,6 @@ void Testbench_mvau_std(stream<ap_inp<SIMD1*INPUT_PRECISION> > & in,
   Matrix_Vector_Activate_Batch<MatrixW, MatrixH, SIMD1, PE1, 1,
 			       Slice<ap_inp<INPUT_PRECISION>>, Slice<ap_out<ACTIVATION_PRECISION>>, Identity>
     (static_cast<hls::stream<ap_inp<SIMD1*INPUT_PRECISION>>&>(in),
-     static_cast<hls::stream<ap_inp<PE1*ACTIVATION_PRECISION>>&>(out),
+     static_cast<hls::stream<ap_out<PE1*ACTIVATION_PRECISION>>&>(out),
      PARAM::weights, PassThroughActivation<ap_out<ACTIVATION_PRECISION>>(), numReps*OFMDim1*OFMDim1, ap_resource_lut());  
 }
