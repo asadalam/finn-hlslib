@@ -56,7 +56,7 @@ using namespace hls;
 #include "config.h"
 #define numReps 1
 
-void MVAU_ThresholdingBatch3_std(stream<ap_inp<PE1*ACTIVATION_PRECISION> > & in,
+void MVAU_ThresholdingBatch0_std(stream<ap_inp<PE1*ACTIVATION_PRECISION> > & in,
 				stream<ap_out<PE1*INPUT_PRECISION> > & out)
 //			unsigned int numReps)
 {
@@ -65,14 +65,14 @@ void MVAU_ThresholdingBatch3_std(stream<ap_inp<PE1*ACTIVATION_PRECISION> > & in,
 #pragma HLS stream depth=2 variable=in
 #pragma HLS stream depth=2 variable=out
 #pragma HLS INTERFACE ap_ctrl_none port=return
-#include "thresh.h"
+#include "thresh_batch0.h"
 #pragma HLS ARRAY_PARTITION variable=threshs.m_thresholds complete dim=1
 #pragma HLS ARRAY_PARTITION variable=threshs.m_thresholds complete dim=3
 
 #pragma HLS DATAFLOW
 
   // Activation Batch
-  Thresholding_Batch<IFMDim1,OFM_Channels1,PE1,
+  Thresholding_Batch<IFMDim1,IFMDim1,OFM_Channels1,PE1,
 		     Slice<ap_out<ACTIVATION_PRECISION>>, Slice<ap_inp<INPUT_PRECISION>> >
     (in,out,threshs, numReps*OFMDim1*OFMDim1);
 }

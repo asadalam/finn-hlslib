@@ -39,10 +39,10 @@
  # batch unit using standard integers (>1 bit) for weights and input activation
  #
 ###############################################################################
-open_project hls-syn-mvau-act-batch3-std
+open_project hls-syn-mvau-act-batch0-std
 add_files mvau_act_top_std.cpp -cflags "-std=c++0x -I$::env(FINN_HLS_ROOT) -I$::env(FINN_HLS_ROOT)/tb" 
 #add_files -tb mvau_tb_std.cpp -cflags "-std=c++0x -I$::env(FINN_HLS_ROOT) -I$::env(FINN_HLS_ROOT)/tb" 
-set_top MVAU_ThresholdingBatch3_std
+set_top MVAU_ThresholdingBatch0_std
 open_solution sol1
 set_part {xc7z020clg400-1}
 #{xczu3eg-sbva484-1-i}

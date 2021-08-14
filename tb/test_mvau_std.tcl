@@ -39,30 +39,31 @@
  # batch unit using standard integers (>1 bit) for weights and input activation
  #
 ###############################################################################
-open_project hls-syn-mvau-std
-add_files mvau_top_std.cpp -cflags "-std=c++0x -I$::env(FINN_HLS_ROOT) -I$::env(FINN_HLS_ROOT)/tb" 
-add_files -tb mvau_tb_std.cpp -cflags "-std=c++0x -I$::env(FINN_HLS_ROOT) -I$::env(FINN_HLS_ROOT)/tb" 
-set_top Testbench_mvau_std
+open_project hls-syn-mvau-batch0-std
+add_files mvau_batch0_top_std.cpp -cflags "-std=c++0x -I$::env(FINN_HLS_ROOT) -I$::env(FINN_HLS_ROOT)/tb" 
+add_files -tb mvau_batch0_tb_std.cpp -cflags "-std=c++0x -I$::env(FINN_HLS_ROOT) -I$::env(FINN_HLS_ROOT)/tb" 
+set_top Testbench_mvau_batch0_std
 open_solution sol1
-set_part {xczu3eg-sbva484-1-i}
-#{xc7z020clg400-1}
+set_part {xc7z020clg400-1}
+#{xczu3eg-sbva484-1-i}
+#
 #{xczu7ev-ffvc1156-2-e}
 create_clock -period 5 -name default
 config_compile -ignore_long_run_time -disable_unroll_code_size_check
 ## C-simulation
 csim_design
 ## Synthesizing HLS and finding synthesis execution time
-# set t0 [clock clicks -milliseconds]
-# csynth_design
-# set t1 [expr {([clock clicks -milliseconds] - $t0)/1000.}]
-# ## Co-simulation (C+HLS generated RTL)
-# cosim_design
-# ## Exporting design for analysis
-# set t2 [clock clicks -milliseconds]
-# export_design -flow syn -rtl verilog -format ip_catalog
-# set t3 [expr {([clock clicks -milliseconds] - $t2)/1000.}]
-# set t4 [expr {$t1 + $t3}]
-# set outfile [open "hls_exec.rpt" w]
-# puts $outfile $t4
-# close $outfile
+set t0 [clock clicks -milliseconds]
+csynth_design
+set t1 [expr {([clock clicks -milliseconds] - $t0)/1000.}]
+## Co-simulation (C+HLS generated RTL)
+cosim_design
+## Exporting design for analysis
+set t2 [clock clicks -milliseconds]
+export_design -flow syn -rtl verilog -format ip_catalog
+set t3 [expr {([clock clicks -milliseconds] - $t2)/1000.}]
+set t4 [expr {$t1 + $t3}]
+set outfile [open "hls_exec.rpt" w]
+puts $outfile $t4
+close $outfile
 exit

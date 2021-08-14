@@ -36,7 +36,7 @@ import argparse
 import os
 import random
 
-def gen_weights(mvau_env,kdim,iwl,ifmc,ofmc,ifmd,wwl,owl,simd,pe,stride=1,mmv=1):
+def gen_weights(mvau_env,kdim,iwl,isgn,ifmc,ofmc,ifmd,wwl,wsgn,owl,simd,pe,stride=1,mmv=1):
     outFileWeights = open("memdata.h" , "wt")
     outFileConfig = open("config.h" , "wt")
     outFileWeightsFull_fn = mvau_env+"/proj/sim/weights_mem_full.mem"
@@ -57,8 +57,8 @@ def gen_weights(mvau_env,kdim,iwl,ifmc,ofmc,ifmd,wwl,owl,simd,pe,stride=1,mmv=1)
     expand = 1
     w_precision = wwl
     mmv=1
-    wgt_sign = 0
-    inp_sign = 0
+    wgt_sign = wsgn
+    inp_sign = isgn
     out_sign = 0#wgt_sign or inp_sign
     
     tile = ifm_channels *kernel_dim*kernel_dim * ofm_channels // (simd*pe)
@@ -174,6 +174,8 @@ def parser():
 			help="Filter dimension")
     parser.add_argument('-i','--inp_wl',default=8,type=int,
                         help="Input word length")
+    parser.add_argument('--inp_sgn', default=0, type=int,
+                        help="Signed/unsigned input activation")
     parser.add_argument('--ifm_ch', default=4,type=int,
 			help="Input feature map channels")
     parser.add_argument('--ofm_ch', default=4, type=int,
@@ -182,6 +184,8 @@ def parser():
 			help="Input feature map dimensions")
     parser.add_argument('-w','--wgt_wl',default=1,type=int,
                         help="Weight word length")
+    parser.add_argument('--wgt_sgn', default=0, type=int,
+                        help="Signed/unsigned weights")
     parser.add_argument('-o','--out_wl', default=16, type=int,
 			help="Output word length")
     parser.add_argument('-s','--simd',default=2,type=int,
@@ -200,7 +204,9 @@ if __name__ == "__main__":
     mvau_env = os.environ.get('MVAU_RTL_ROOT')
 
     ## Calling the weight generation function
-    gen_weights(mvau_env,args.kdim,args.inp_wl,args.ifm_ch,args.ofm_ch,args.ifm_dim,args.wgt_wl,args.out_wl,args.simd,args.pe)
+    gen_weights(mvau_env,args.kdim,args.inp_wl,args.inp_sgn,args.ifm_ch,
+                args.ofm_ch,args.ifm_dim,args.wgt_wl,args.wgt_sgn,
+                args.out_wl,args.simd,args.pe)
                             
     sys.exit(0)
 

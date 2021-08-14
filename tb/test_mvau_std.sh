@@ -7,7 +7,7 @@
 # 4) Copy the dumped files to RTL simulation folder
 # 5) For weight files, only copy the first ${1} lines which equates (kernel_dim*kernel_dim*ifm_channels*ofm_channels)/(pe*simd)
 
-WORKING_DIR=hls-syn-mvau-std
+WORKING_DIR=hls-syn-mvau-batch0-std
 if [ -d ${WORKING_DIR} ]; then
     echo "Removing project folder";
     rm -Rf ${WORKING_DIR};
@@ -20,11 +20,13 @@ ifm_dim=${2:-4}
 ofm_ch=${3:-4}
 kdim=${4:-2}
 inp_wl=${5:-8}
-wgt_wl=${6:-1}
-out_wl=${7:-16}
-simd=${8:-2}
-pe=${9:-2}
-python gen_weights_fn.py --ifm_ch ${ifm_ch} --ifm_dim ${ifm_dim} --ofm_ch ${ofm_ch} --kdim ${kdim} --inp_wl ${inp_wl} --wgt_wl ${wgt_wl} --out_wl ${out_wl} --simd ${simd} --pe ${pe}
+inp_sgn=${6:-0}
+wgt_wl=${7:-1}
+wgt_sgn=${8:-0}
+out_wl=${9:-16}
+simd=${10:-2}
+pe=${11:-2}
+python gen_weights_fn.py --ifm_ch ${ifm_ch} --ifm_dim ${ifm_dim} --ofm_ch ${ofm_ch} --kdim ${kdim} --inp_wl ${inp_wl} --inp_sgn ${inp_sgn} --wgt_wl ${wgt_wl} --wgt_sgn ${wgt_sgn} --out_wl ${out_wl} --simd ${simd} --pe ${pe}
 if [ $? -eq 0 ]; then
     echo "Weight generation successfull"
 else
@@ -32,7 +34,7 @@ else
     exit 0
 fi
 ### temp copying of weights
-#cp params.h memdata.h
+cp params_batch0.h memdata.h
 
 echo "Running HLS simulation"
 vivado_hls -f test_mvau_std.tcl
@@ -43,7 +45,7 @@ else
     exit 0
 fi
 echo "Copying dumped data"
-cp hls-syn-mvau-std/sol1/csim/build/{inp_act.mem,out_act.mem} ${MVAU_RTL_ROOT}/proj/sim/
+cp ${WORKING_DIR}/sol1/csim/build/{inp_act.mem,out_act.mem} ${MVAU_RTL_ROOT}/proj/sim/
 if [ $? -eq 0 ]; then
     echo "Data successfully copied"
 else
