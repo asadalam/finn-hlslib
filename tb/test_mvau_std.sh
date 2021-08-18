@@ -7,7 +7,7 @@
 # 4) Copy the dumped files to RTL simulation folder
 # 5) For weight files, only copy the first ${1} lines which equates (kernel_dim*kernel_dim*ifm_channels*ofm_channels)/(pe*simd)
 
-WORKING_DIR=hls-syn-mvau-batch0-std
+WORKING_DIR=hls-syn-mvau-std
 if [ -d ${WORKING_DIR} ]; then
     echo "Removing project folder";
     rm -Rf ${WORKING_DIR};
@@ -33,8 +33,6 @@ else
     echo "Weight generation failed"
     exit 0
 fi
-### temp copying of weights
-cp params_batch0.h memdata.h
 
 echo "Running HLS simulation"
 vivado_hls -f test_mvau_std.tcl

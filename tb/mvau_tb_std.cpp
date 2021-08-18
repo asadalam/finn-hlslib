@@ -149,20 +149,20 @@ int main()
   StreamingDataWidthConverter_Batch<IFM_Channels1*INPUT_PRECISION, SIMD1*INPUT_PRECISION, InpPerImage>
     (input_stream, wa_in, MAX_IMAGES);
 
-  ConvolutionInputGenerator<KERNEL_DIM, IFM_Channels1, INPUT_PRECISION, IFMDim1, OFMDim1, SIMD1, 1>
-    (wa_in, convInp, MAX_IMAGES, ap_resource_dflt());
+  // ConvolutionInputGenerator<KERNEL_DIM, IFM_Channels1, INPUT_PRECISION, IFMDim1, OFMDim1, SIMD1, 1>
+  //   (wa_in, convInp, MAX_IMAGES, ap_resource_dflt());
 
   // Dumping the input activation stream
-  logStringStream<SIMD1*INPUT_PRECISION>("inp_act.mem",convInp);
-  //logStringStream<SIMD1*INPUT_PRECISION>("inp_act.mem",wa_in);
+  //logStringStream<SIMD1*INPUT_PRECISION>("inp_act.mem",convInp);
+  logStringStream<SIMD1*INPUT_PRECISION>("inp_act.mem",wa_in);
   
   // Performing Behavioral Convolution
   conv<MAX_IMAGES,IFMDim1,OFMDim1,IFM_Channels1,OFM_Channels1, KERNEL_DIM, 1, ap_inp<INPUT_PRECISION> >(IMAGE, W1, TEST);
 
   // Calling the HLS test bench twice to populate the II report
   for(int i = 0; i < NUM_EXECUTIONS; i++) {
-    Testbench_mvau_std(convInp, mvOut);//, MAX_IMAGES);
-    //Testbench_mvau_batch1_std(wa_in, mvOut);//, MAX_IMAGES);
+    //Testbench_mvau_std(convInp, mvOut);//, MAX_IMAGES);
+    Testbench_mvau_std(wa_in, mvOut);//, MAX_IMAGES);
   }
   
   // Converting the output stream
